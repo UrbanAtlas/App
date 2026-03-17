@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UrbanAtlas — Download</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --orange:  #f97316;
+      --yellow:  #fbbf24;
+      --amber:   #f59e0b;
+      --cream:   #fef3c7;
+      --brown:   #78350f;
+      --dark:    #1c0a00;
+      --sky1:    #ff7849;
+      --sky2:    #ffb347;
+      --sky3:    #ffd580;
+      --ground:  #3b1f0a;
+      --window:  #fde68a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; image-rendering: pixelated; }
+
+    body {
+      background: var(--dark);
+      font-family: 'Press Start 2P', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── SKY GRADIENT ── */
+    .sky {
+      width: 100%;
+      height: 340px;
+      background: linear-gradient(to bottom,
+        #c0392b 0%, #e8582a 20%, #f97316 40%,
+        #fbbf24 65%, #fde68a 85%, #fff4c2 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Stars (tiny pixels) */
+    .stars {
+      position: absolute; inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 10% 15%, #fff 100%, transparent),
+        radial-gradient(1px 1px at 25% 8%,  #fff 100%, transparent),
+        radial-gradient(1px 1px at 45% 20%, #fff 100%, transparent),
+        radial-gradient(1px 1px at 60% 5%,  #fff 100%, transparent),
+        radial-gradient(1px 1px at 80% 12%, #fff 100%, transparent),
+        radial-gradient(1px 1px at 90% 22%, #fff 100%, transparent),
+        radial-gradient(1px 1px at 5%  30%, #fff 100%, transparent);
+      opacity: .55;
+    }
+
+    /* Pixel sun */
+    .sun {
+      position: absolute;
+      bottom: 60px; left: 50%;
+      transform: translateX(-50%);
+      width: 72px; height: 72px;
+      background: #fff7c0;
+      box-shadow:
+        -8px 0 0 #fff7c0, 8px 0 0 #fff7c0,
+        0 -8px 0 #fff7c0, 0  8px 0 #fff7c0,
+        -16px 0 0 #fde68a, 16px 0 0 #fde68a,
+        0 -16px 0 #fde68a, 0  16px 0 #fde68a,
+        -8px -8px 0 #fde68a,  8px -8px 0 #fde68a,
+        -8px  8px 0 #fde68a,  8px  8px 0 #fde68a;
+      animation: sunpulse 3s ease-in-out infinite;
+    }
+    @keyframes sunpulse {
+      0%,100% { filter: brightness(1); }
+      50%      { filter: brightness(1.15); }
+    }
+
+    /* Pixel cityscape */
+    .cityscape {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 180px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 0;
+    }
+
+    .building {
+      position: relative;
+      background: var(--dark);
+      flex-shrink: 0;
+    }
+
+    /* Windows on buildings */
+    .building::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(
+          transparent 0px, transparent 10px,
+          rgba(0,0,0,0.3) 10px, rgba(0,0,0,0.3) 12px
+        ),
+        repeating-linear-gradient(
+          90deg,
+          transparent 0px, transparent 8px,
+          rgba(0,0,0,0.3) 8px, rgba(0,0,0,0.3) 10px
+        );
+    }
+
+    /* Lit windows overlay */
+    .building .wins {
+      position: absolute;
+      inset: 8px;
+      display: grid;
+      gap: 6px;
+    }
+    .win {
+      background: var(--window);
+      opacity: 0;
+      animation: blink 4s ease-in-out infinite;
+    }
+    .win:nth-child(odd)  { animation-delay: .5s; }
+    .win:nth-child(3n)   { animation-delay: 1.2s; }
+    .win:nth-child(5n)   { animation-delay: 2s; opacity: 1; }
+    @keyframes blink {
+      0%,100% { opacity:.9; }
+      45%,55% { opacity:.2; }
+    }
+
+    /* Ground strip */
+    .ground {
+      width: 100%;
+      height: 18px;
+      background: var(--ground);
+      border-top: 4px solid #5a2d0c;
+    }
+
+    /* ── MAIN CARD ── */
+    .container {
+      max-width: 520px;
+      margin: -2px auto 0;
+      padding: 0 16px 60px;
+    }
+
+    .card {
+      background: var(--dark);
+      border: 4px solid var(--orange);
+      box-shadow:
+        8px 8px 0 var(--brown),
+        inset 0 0 0 2px #3b1f0a;
+      padding: 32px 28px;
+      position: relative;
+      animation: slidein .5s ease-out both;
+    }
+    @keyframes slidein {
+      from { transform: translateY(30px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    /* Corner pixels */
+    .card::before, .card::after {
+      content: '';
+      position: absolute;
+      width: 12px; height: 12px;
+      background: var(--yellow);
+    }
+    .card::before { top: -2px; left: -2px; }
+    .card::after  { bottom: -2px; right: -2px; }
+
+    /* App icon placeholder */
+    .icon-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .app-icon {
+      width: 80px; height: 80px;
+      background: var(--orange);
+      border: 4px solid var(--yellow);
+      box-shadow: 4px 4px 0 var(--brown);
+      display: grid;
+      grid-template-columns: repeat(5,1fr);
+      grid-template-rows: repeat(5,1fr);
+      gap: 2px;
+      padding: 6px;
+    }
+    .px { background: var(--dark); }
+    .px.lit { background: var(--yellow); }
+    .px.med { background: var(--amber); }
+
+    .app-title {
+      text-align: center;
+      color: var(--yellow);
+      font-size: 1.35rem;
+      letter-spacing: 2px;
+      text-shadow: 3px 3px 0 var(--brown);
+      margin-bottom: 8px;
+    }
+
+    .divider {
+      width: 100%;
+      height: 4px;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--orange) 0, var(--orange) 8px,
+        transparent 8px, transparent 16px
+      );
+      margin: 18px 0;
+    }
+
+    .desc {
+      font-family: 'VT323', monospace;
+      color: var(--cream);
+      font-size: 1.25rem;
+      line-height: 1.7;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .meta {
+      font-family: 'VT323', monospace;
+      color: var(--amber);
+      font-size: 1rem;
+      text-align: center;
+      margin-bottom: 28px;
+      opacity: .8;
+    }
+
+    /* Download button */
+    .dl-btn {
+      display: block;
+      width: 100%;
+      padding: 16px 0;
+      background: var(--orange);
+      color: var(--dark);
+      text-align: center;
+      font-family: 'Press Start 2P', monospace;
+      font-size: .7rem;
+      letter-spacing: 1px;
+      text-decoration: none;
+      border: 4px solid var(--yellow);
+      box-shadow: 6px 6px 0 var(--brown);
+      transition: transform .08s, box-shadow .08s;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .dl-btn:hover {
+      transform: translate(2px, 2px);
+      box-shadow: 4px 4px 0 var(--brown);
+    }
+    .dl-btn:active {
+      transform: translate(6px, 6px);
+      box-shadow: 0px 0px 0 var(--brown);
+    }
+    .dl-btn .arrow {
+      display: inline-block;
+      margin-right: 10px;
+      animation: bounce 1s ease-in-out infinite;
+    }
+    @keyframes bounce {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(4px); }
+    }
+
+    /* Warning note */
+    .note {
+      margin-top: 18px;
+      border: 2px dashed var(--brown);
+      padding: 12px 14px;
+      background: #2a0e00;
+    }
+    .note p {
+      font-family: 'VT323', monospace;
+      color: var(--amber);
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+    .note p strong {
+      color: var(--yellow);
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 28px;
+      font-family: 'VT323', monospace;
+      color: var(--brown);
+      font-size: 1rem;
+      letter-spacing: 1px;
+    }
+
+    /* Scanlines overlay */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        transparent 0px, transparent 3px,
+        rgba(0,0,0,.07) 3px, rgba(0,0,0,.07) 4px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* Scroll pixel art clouds */
+    .cloud {
+      position: absolute;
+      background: rgba(255,240,200,.18);
+      animation: drift linear infinite;
+    }
+    @keyframes drift {
+      from { transform: translateX(-120px); }
+      to   { transform: translateX(110vw); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SKY + CITYSCAPE -->
+  <div class="sky">
+    <div class="stars"></div>
+
+    <!-- Drifting clouds -->
+    <div class="cloud" style="width:64px;height:16px;top:40px;left:10%;animation-duration:28s;"></div>
+    <div class="cloud" style="width:48px;height:12px;top:70px;left:60%;animation-duration:22s;animation-delay:-10s;"></div>
+    <div class="cloud" style="width:80px;height:20px;top:25px;left:80%;animation-duration:35s;animation-delay:-5s;"></div>
+
+    <div class="sun"></div>
+
+    <!-- Pixel cityscape -->
+    <div class="cityscape">
+      <!-- B1 -->
+      <div class="building" style="width:38px;height:90px;margin-right:2px;">
+        <div class="wins" style="grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(4,1fr);">
+          <div class="win"></div><div class="win"></div>
+          <div class="win"></div><div class="win"></div>
+          <div class="win"></div><div class="win"></div>
+          <div class="win"></div><div class="win"></div>
+        </div>
+      </div>
+      <!-- B2 tall -->
+      <div class="building" style="width:28px;height:145px;margin-right:2px;">
+        <div class="wins" style="grid-template-columns:repeat(1,1fr);grid-template-rows:repeat(7,1fr);">
+          <div class="win"></div><div class="win"></div><div class="win"></div>
+          <div class="win"></div><div class="win"></div><div class="win"></div><div class="win"></div>
+        </div>
+      </div>
+      <!-- B3 -->
+      <div class="building" style="width:52px;height:110px;margin-right:2px;">
+        <div class="wins" style="grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr);">
+          <div class="win"></div><div class="win"></div><div class="win"></div>
+          <div class="win"></div><div class="win"></div><div class="win"></div>
+          <div class="win"></div><div class="win"></div><div class="win"></div>
+          <div class="win"></div><div class="win"></div><div class="win"></div>
+        </div>
+      </div>
+      <!-- B4 tallest -->
+      <div class="building" style="width:36px;height:165px;margin-right:2px;">
+        <div class="wins" style="grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(8,1fr);">
+          <div class="win"></div><div class="win"></div><div class="win"></div><div class="win"></div>
+          <div class="win"></div><div class="win"></div><div class="win"></div><div class="win"></div>
+          <div class="win"></div><div class="win"></div><div class="win"></div><div class="win"></div>
+          <div class="win"></div><div class="win"></div><div class="win"></div><div class="win"></div>
+        </div>
+      </div>
+      <!-- B5 -->
+      <div class="building" style="width:44px;height:100px;margin-right:2px;">
+        <div class="wins" style="grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(4,1fr);">
+          <div class="win"></div><div class="win"></div>
+          <div class="win"></div><div class="win"></div>
+          <div class="win"></div><div class="win"></div>
+          <div class="win"></div><div class="win"></div>
+        </div>
+      </div>
+      <!-- B6 -->
+      <div class="building" style="width:30px;height:125px;margin-right:2px;">
+        <div class="wins" style="grid-template-columns:repeat(1,1fr);grid-template-rows:repeat(6,1fr);">
+          <div class="win"></div><div class="win"></div><div class="win"></div>
+          <div class="win"></div><div class="win"></div><div class="win"></div>
+        </div>
+      </div>
+      <!-- B7 -->
+      <div class="building" style="width:48px;height:85px;">
+        <div class="wins" style="grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);">
+          <div class="win"></div><div class="win"></div><div class="win"></div>
+          <div class="win"></div><div class="win"></div><div class="win"></div>
+          <div class="win"></div><div class="win"></div><div class="win"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ground"></div>
+
+  <!-- CARD -->
+  <div class="container">
+    <div class="card">
+
+      <!-- Pixel icon -->
+      <div class="icon-wrap">
+        <div class="app-icon">
+          <div class="px"></div>   <div class="px lit"></div> <div class="px lit"></div> <div class="px lit"></div> <div class="px"></div>
+          <div class="px lit"></div><div class="px med"></div><div class="px lit"></div><div class="px med"></div><div class="px lit"></div>
+          <div class="px lit"></div><div class="px lit"></div><div class="px lit"></div><div class="px lit"></div><div class="px lit"></div>
+          <div class="px"></div>   <div class="px lit"></div> <div class="px"></div>    <div class="px lit"></div> <div class="px"></div>
+          <div class="px"></div>   <div class="px"></div>     <div class="px lit"></div> <div class="px"></div>    <div class="px"></div>
+        </div>
+      </div>
+
+      <div class="app-title">URBAN ATLAS</div>
+      <div class="divider"></div>
+
+      <p class="desc">
+        Explore your community.<br>
+        Navigate. Discover. Connect.
+      </p>
+      <p class="meta">Android APK &nbsp;|&nbsp; v1.0 &nbsp;|&nbsp; Brgy. Commonwealth, QC</p>
+
+      <a class="dl-btn"
+         href="https://drive.google.com/uc?export=download&id=1Ys7w4E2WDulLO3ifeCjNO5-hbQD9NyQj"
+         target="_blank" rel="noopener">
+        <span class="arrow">▼</span> DOWNLOAD APK
+      </a>
+
+      <div class="note">
+        <p>
+          <strong>[ INSTALL GUIDE ]</strong><br>
+          1. Tap Download above<br>
+          2. Open the .apk file<br>
+          3. Allow <strong>"Install unknown apps"</strong> if prompted<br>
+          4. Tap Install &amp; launch!
+        </p>
+      </div>
+
+      <div class="footer">
+        &copy; 2026 UrbanAtlas &nbsp;·&nbsp; urban.atlas.corp@gmail.com
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
